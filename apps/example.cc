@@ -1,36 +1,57 @@
 #include "mlmcpi/sampling/mcmc.hh"
 
+#define STATS_ENABLE_BLAZE_WRAPPERS
+#include <stats.hpp>
+
 #include <cmath>
 #include <iostream>
 #include <random>
 
 using namespace mlmcpi;
 
-struct target_dist {
-  inline double evaluate(double x) const {
-    return std::exp(-0.5 * ((4 - x * x) * (4 - x * x) + x * x));
+using Mat = blaze::DynamicMatrix<double>;
+using Vec = blaze::DynamicVector<double>;
+
+// See: https://transportmaps.mit.edu/docs/example-banana-2d.html
+struct banana_distribution {
+  inline double evaluate(const Vec &x) {
+    const Mat sigma{{1., 0.9}, {0.9, 1.}};
+    const Vec mu{0, 0};
+
+    return stats::dmvnorm(apply_B_inv(x), mu, sigma);
+  }
+
+private:
+  Vec apply_B_inv(const Vec &x) {
+    constexpr double a = 1.;
+    constexpr double b = 1.;
+
+    const auto x1 = x.at(0);
+    const auto x2 = x.at(1);
+    return {{x1 / a, a * (x2 + b * (x1 * x1 + a * a))}};
   }
 };
 
 struct proposal_dist {
-  proposal_dist() : generator{std::random_device{}()}, distribution(0, 1.5) {}
+  inline double evaluate(Vec) const { return 1; }
 
-  inline double evaluate(double x) const { return x; }
+  inline Vec sample(Vec x) {
+    const Mat sigma{{1., 0.5}, {0.5, 1.}};
 
-  inline double sample(double x) { return distribution(generator) + x; }
+    return stats::rmvnorm(x, sigma, engine);
+  }
 
 private:
-  std::mt19937 generator;
-  std::normal_distribution<double> distribution;
+  stats::rand_engine_t engine;
 };
 
 int main() {
-  constexpr int n_burnin = 5000;
+  constexpr int n_burnin = 1000;
   constexpr int n_samples = 10000;
 
-  auto sampler = mcmc<target_dist, proposal_dist>{};
-  auto samples = sampler.sample(n_burnin, n_samples);
+  auto sampler = mcmc<Vec, banana_distribution, proposal_dist>{};
+  auto samples = sampler.sample(n_burnin, n_samples, {0, 0});
 
-  for (const auto sample : samples)
-    std::cout << sample << "\n";
+  for (const auto &sample : samples)
+    std::cout << sample[0] << " " << sample[1] << "\n";
 }

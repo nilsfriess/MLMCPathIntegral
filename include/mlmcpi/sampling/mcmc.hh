@@ -9,11 +9,14 @@
 
 namespace mlmcpi {
 
-template <TargetDistribution P, ProposalDistribution Q> struct mcmc {
+template <typename DataT, TargetDistribution<DataT> P,
+          ProposalDistribution<DataT> Q>
+struct mcmc {
 
-  std::vector<double> sample(std::size_t n_burnin, std::size_t n_samples) {
-    std::vector<double> samples(n_burnin + n_samples);
-    samples[0] = 0;
+  std::vector<DataT> sample(std::size_t n_burnin, std::size_t n_samples,
+                            DataT initial_sample = DataT{0}) {
+    std::vector<DataT> samples(n_burnin + n_samples);
+    samples[0] = initial_sample;
 
     P target_dist;
     Q proposal_dist;
