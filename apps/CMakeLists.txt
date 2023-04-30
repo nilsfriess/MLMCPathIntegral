@@ -1,8 +1,5 @@
 add_executable(example example.cc)
 
-find_package(LAPACK)
-find_package(blaze REQUIRED)
-
 target_include_directories(example PRIVATE "../external/gcem/install/include")
 target_include_directories(example PRIVATE "../external/stats/include")
 

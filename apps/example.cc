@@ -1,7 +1,7 @@
+#include "mlmcpi/sampling/distributions.hh"
 #include "mlmcpi/sampling/mcmc.hh"
 
-#define STATS_ENABLE_BLAZE_WRAPPERS
-#include <stats.hpp>
+#include <blaze/Blaze.h>
 
 #include <cmath>
 #include <iostream>
@@ -18,7 +18,7 @@ struct banana_distribution {
     const Mat sigma{{1., 0.9}, {0.9, 1.}};
     const Vec mu{0, 0};
 
-    return stats::dmvnorm(apply_B_inv(x), mu, sigma);
+    return normal_density(apply_B_inv(x), mu, sigma);
   }
 
 private:
@@ -38,11 +38,8 @@ struct proposal_dist {
   inline Vec sample(Vec x) {
     const Mat sigma{{1., 0.5}, {0.5, 1.}};
 
-    return stats::rmvnorm(x, sigma, engine);
+    return normal_sample(x, sigma);
   }
-
-private:
-  stats::rand_engine_t engine;
 };
 
 int main() {
