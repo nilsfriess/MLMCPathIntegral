@@ -1,6 +1,2 @@
-add_executable(example example.cc)
-
-target_include_directories(example PRIVATE "../external/gcem/install/include")
-target_include_directories(example PRIVATE "../external/stats/include")
-
-target_link_libraries(example PRIVATE LAPACK::LAPACK blaze::blaze MLMCPathIntegral)
+add_executable(banana banana.cc)
+target_link_libraries(banana PRIVATE LAPACK::LAPACK blaze::blaze MLMCPathIntegral)
