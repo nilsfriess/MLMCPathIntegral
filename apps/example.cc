@@ -9,8 +9,8 @@
 
 using namespace mlmcpi;
 
-using Mat = blaze::DynamicMatrix<double>;
-using Vec = blaze::DynamicVector<double>;
+using Mat = blaze::StaticMatrix<double, 2, 2>;
+using Vec = blaze::StaticVector<double, 2>;
 
 // See: https://transportmaps.mit.edu/docs/example-banana-2d.html
 struct banana_distribution {
