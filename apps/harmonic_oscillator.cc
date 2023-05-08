@@ -4,6 +4,10 @@
 
 #include <blaze/Blaze.h>
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
+#include <fstream>
 #include <iostream>
 #include <numeric>
 #include <random>
@@ -41,37 +45,55 @@ struct harmonic_oscillator_action {
   constexpr static double mu2 = 1;
 };
 
-int main() {
+int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    std::cerr << "Provide parameter file as argument" << std::endl;
+    return -1;
+  }
+
   std::random_device rd;
   auto engine = std::make_shared<std::mt19937>(rd());
 
-  constexpr double T = 4;
-  constexpr double delta_t = 0.5;
-  constexpr int N = T / delta_t;
-  std::cout << "a = " << delta_t << ", N = " << N << std::endl;
+  std::ifstream params_file(argv[1]);
+  json data = json::parse(params_file);
+
+  const double T = data["T"];
+  const double delta_t = data["delta_t"];
+  const int N = T / delta_t;
 
   auto action = std::make_shared<harmonic_oscillator_action>();
   action->delta_t = delta_t;
 
-  blaze::DynamicMatrix<double> Sigma = 0.1 * blaze::IdentityMatrix<double>(N);
+  blaze::DynamicMatrix<double> Sigma = 0.08 * blaze::IdentityMatrix<double>(N);
   auto proposal_dist =
       std::make_shared<mlmcpi::random_walk_proposal<>>(Sigma, engine);
 
   mlmcpi::single_level_mcmc sampler(action, proposal_dist);
   auto initial_path = blaze::zero<double>(N);
 
-  constexpr int n_burnin = 1000;
-  constexpr int n_samples = 20000;
-  auto samples = sampler.sample(n_burnin, n_samples, initial_path);
+  const int n_burnin = data["n_burnin"];
+  const int n_samples = data["n_samples"];
+  auto sample_res = sampler.sample(n_burnin, n_samples, initial_path);
+  auto samples = sample_res.samples;
+  auto acceptance_rate = sample_res.acceptance_rate;
 
-  auto qoi = [](const blaze::DynamicVector<double> &path) {
+  auto qoi = [&](const blaze::DynamicVector<double> &path) {
     return blaze::mean(path * path);
   };
 
-  auto res = std::transform_reduce(samples.begin(), samples.end(), 0.,
-                                   std::plus<double>{}, qoi);
-  res /= samples.size();
+  auto mean = (1. / samples.size()) *
+              std::transform_reduce(samples.begin(), samples.end(), 0.,
+                                    std::plus<double>{}, qoi);
 
-  std::cout << "Result   = " << res << std::endl;
+  const auto var_helper = [&](const blaze::DynamicVector<double> &path) {
+    const auto diff = qoi(path) - mean;
+    return diff * diff;
+  };
+  auto var = (1. / (samples.size() - 1)) *
+             std::transform_reduce(samples.begin(), samples.end(), 0.,
+                                   std::plus<double>{}, var_helper);
+
+  std::cout << "Result   = " << mean << " ± " << var << std::endl;
   std::cout << "Analytic = " << action->analytic_solution(N) << std::endl;
+  std::cout << "Acceptance rate = " << acceptance_rate << std::endl;
 }

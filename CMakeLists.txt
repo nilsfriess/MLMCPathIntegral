@@ -12,5 +12,6 @@ find_package(blaze REQUIRED)
 find_package(LAPACK REQUIRED)
 
 add_executable(harmonic_oscillator apps/harmonic_oscillator.cc)
+target_include_directories(harmonic_oscillator PRIVATE external/json/single_include)
 target_link_libraries(harmonic_oscillator PRIVATE MLMCPathIntegral)                    
  
