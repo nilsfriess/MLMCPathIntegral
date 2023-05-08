@@ -2,7 +2,6 @@
 
 #include "mlmcpi/types.hh"
 
-#include <iostream>
 #include <memory>
 #include <random>
 #include <utility>
@@ -42,7 +41,6 @@ struct single_level_mcmc {
         samples.push_back(proposal);
       } else {
         auto acceptance_ratio = std::exp(-delta_S);
-        std::cout << "Acceptance ratio = " << acceptance_ratio << std::endl;
         if (unif_dist(generator) < acceptance_ratio)
           samples.push_back(proposal);
         else
