@@ -86,13 +86,13 @@ int main(int argc, char *argv[]) {
               std::transform_reduce(samples.begin(), samples.end(), 0.,
                                     std::plus<double>{}, qoi);
 
-  const auto var_helper = [&](const blaze::DynamicVector<double> &path) {
-    const auto diff = qoi(path) - mean;
-    return diff * diff;
-  };
   auto var = (1. / (samples.size() - 1)) *
-             std::transform_reduce(samples.begin(), samples.end(), 0.,
-                                   std::plus<double>{}, var_helper);
+             std::transform_reduce(
+                 samples.begin(), samples.end(), 0., std::plus<double>{},
+                 [&](const blaze::DynamicVector<double> &path) {
+                   const auto diff = qoi(path) - mean;
+                   return diff * diff;
+                 });
 
   std::cout << "Result   = " << mean << " ± " << var << std::endl;
   std::cout << "Analytic = " << action->analytic_solution(N) << std::endl;
