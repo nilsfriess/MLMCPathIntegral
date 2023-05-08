@@ -1,3 +1,4 @@
+#include "mlmcpi/proposals/random_walk.hh"
 #include "mlmcpi/sampling/distributions.hh"
 #include "mlmcpi/sampling/single_level_mcmc.hh"
 
@@ -5,6 +6,7 @@
 
 #include <iostream>
 #include <numeric>
+#include <random>
 
 struct harmonic_oscillator_action {
   using PathType = blaze::DynamicVector<double>;
@@ -39,23 +41,10 @@ struct harmonic_oscillator_action {
   constexpr static double mu2 = 1;
 };
 
-struct multivariate_normal_proposal {
-  using PathType = blaze::DynamicVector<double>;
-  double density(const PathType &x, const PathType &y) {
-    blaze::DynamicMatrix<double> Sigma =
-        0.1 * blaze::IdentityMatrix<double>(x.size());
-
-    return mlmcpi::normal_density(x, y, Sigma);
-  }
-
-  PathType sample(const PathType &path) {
-    blaze::DynamicMatrix<double> Sigma =
-        0.1 * blaze::IdentityMatrix<double>(path.size());
-    return mlmcpi::normal_sample(path, Sigma);
-  }
-};
-
 int main() {
+  std::random_device rd;
+  auto engine = std::make_shared<std::mt19937>(rd());
+
   constexpr double T = 4;
   constexpr double delta_t = 0.5;
   constexpr int N = T / delta_t;
@@ -64,7 +53,9 @@ int main() {
   auto action = std::make_shared<harmonic_oscillator_action>();
   action->delta_t = delta_t;
 
-  auto proposal_dist = std::make_shared<multivariate_normal_proposal>();
+  blaze::DynamicMatrix<double> Sigma = 0.1 * blaze::IdentityMatrix<double>(N);
+  auto proposal_dist =
+      std::make_shared<mlmcpi::random_walk_proposal<>>(Sigma, engine);
 
   mlmcpi::single_level_mcmc sampler(action, proposal_dist);
   auto initial_path = blaze::zero<double>(N);
