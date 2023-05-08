@@ -3,7 +3,6 @@
 
 #include <blaze/Blaze.h>
 
-#include <execution>
 #include <iostream>
 #include <numeric>
 
@@ -78,8 +77,8 @@ int main() {
     return blaze::mean(path * path);
   };
 
-  auto res = std::transform_reduce(std::execution::par, samples.begin(),
-                                   samples.end(), 0., std::plus<double>{}, qoi);
+  auto res = std::transform_reduce(samples.begin(), samples.end(), 0.,
+                                   std::plus<double>{}, qoi);
   res /= samples.size();
 
   std::cout << "Result   = " << res << std::endl;
