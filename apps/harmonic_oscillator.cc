@@ -29,7 +29,7 @@ struct harmonic_oscillator_action {
     return 0.5 * m0 * delta_t * res;
   }
 
-  double analytic_solution(std::size_t path_length) {
+  double analytic_solution(std::size_t path_length) const {
     double R = 1. + 0.5 * delta_t * delta_t * mu2 -
                delta_t * std::sqrt(mu2) *
                    std::sqrt(1. + 0.25 * delta_t * delta_t * mu2);
@@ -64,11 +64,12 @@ int main(int argc, char *argv[]) {
   auto action = std::make_shared<harmonic_oscillator_action>();
   action->delta_t = delta_t;
 
-  blaze::DynamicMatrix<double> Sigma = 0.08 * blaze::IdentityMatrix<double>(N);
-  auto proposal_dist =
+  const blaze::DynamicMatrix<double> Sigma =
+      0.08 * blaze::IdentityMatrix<double>(N);
+  auto proposal =
       std::make_shared<mlmcpi::random_walk_proposal<>>(Sigma, engine);
 
-  mlmcpi::single_level_mcmc sampler(action, proposal_dist);
+  mlmcpi::single_level_mcmc sampler(action, proposal);
   auto initial_path = blaze::zero<double>(N);
 
   const int n_burnin = data["n_burnin"];
