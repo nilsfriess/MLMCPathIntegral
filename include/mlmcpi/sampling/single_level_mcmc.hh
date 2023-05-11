@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mlmcpi/acceptance_probabilities/default.hh"
 #include "sample_result.hh"
 
 #include <iostream>
@@ -10,7 +11,9 @@
 
 namespace mlmcpi {
 
-template <typename Action, typename ProposalDist>
+template <typename Action, typename ProposalDist,
+          typename AcceptanceProbablity =
+              default_log_acceptance_probability<Action, ProposalDist>>
 
 struct single_level_mcmc {
   using PathType = typename Action::PathType;
@@ -31,14 +34,13 @@ struct single_level_mcmc {
 
     [[maybe_unused]] std::size_t rejected_samples = 0;
 
+    AcceptanceProbablity acceptance_prob(action, proposal_distribution);
+
     for (std::size_t i = 1; i < n_burnin + n_samples; ++i) {
       const auto current = samples.at(i - 1);
       const auto proposal = proposal_distribution->sample(current);
 
-      auto delta_S =
-          action->evaluate(proposal) - action->evaluate(current) +
-          std::log(proposal_distribution->density(proposal, current)) -
-          std::log(proposal_distribution->density(current, proposal));
+      auto delta_S = acceptance_prob(current, proposal);
 
       if (delta_S < 0) {
         samples.push_back(proposal);
