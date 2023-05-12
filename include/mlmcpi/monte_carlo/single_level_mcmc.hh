@@ -25,7 +25,7 @@ template <typename Sampler> struct single_level_mcmc {
     std::default_random_engine generator;
     std::uniform_real_distribution<double> unif_dist;
 
-    [[maybe_unused]] std::size_t rejected_samples = 0;
+    std::size_t accepted_samples = 0;
 
     for (std::size_t i = 1; i < n_burnin + n_samples; ++i) {
       const auto current = samples.at(i - 1);
@@ -33,16 +33,15 @@ template <typename Sampler> struct single_level_mcmc {
 
       samples.push_back(proposal.value_or(current));
 
-      if (!proposal && (i > n_burnin))
-        rejected_samples++;
+      if (proposal && (i > n_burnin))
+        accepted_samples++;
     }
 
     samples.erase(samples.begin(), samples.begin() + n_burnin);
 
     sample_result<PathType> res;
     res.samples = samples;
-    res.acceptance_rate =
-        (n_samples - rejected_samples) / static_cast<double>(n_samples);
+    res.acceptance_rate = accepted_samples / static_cast<double>(n_samples);
     return res;
   }
 
