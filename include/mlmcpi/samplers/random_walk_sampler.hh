@@ -63,7 +63,6 @@ private:
     return mean + blaze::decllow(sigma) * normal_samples;
   }
 
-private:
   MatrixType sigma;
   MatrixType inv_sigma;
   double det_sigma;
