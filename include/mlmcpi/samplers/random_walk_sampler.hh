@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mlmcpi/samplers/sampler.hh"
 #include <blaze/math/dense/DynamicMatrix.h>
 #include <blaze/math/dense/DynamicVector.h>
 #include <blaze/math/expressions/DMatDetExpr.h>
@@ -13,7 +14,7 @@
 namespace mlmcpi {
 template <typename Action, typename MatrixType = blaze::DynamicMatrix<double>,
           typename Engine = std::mt19937>
-struct random_walk_sampler {
+struct random_walk_sampler : sampler<Action> {
   using PathType = typename Action::PathType;
 
   random_walk_sampler(const MatrixType &sigma_, std::shared_ptr<Action> action_,
@@ -25,7 +26,7 @@ struct random_walk_sampler {
     blaze::potrf(cholL, 'L'); // Compute Cholesky decomposition of Sigma
   }
 
-  std::optional<PathType> perform_step(const PathType &current) {
+  std::optional<PathType> perform_step(const PathType &current) override {
     const auto proposal = generate_proposal(current);
 
     const auto log_acceptance_prob = action->evaluate(proposal) -
