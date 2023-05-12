@@ -1,3 +1,6 @@
 [submodule "external/json"]
 	path = external/json
 	url = https://github.com/nlohmann/json.git
+[submodule "external/blaze"]
+	path = external/blaze
+	url = https://nilsfriess@bitbucket.org/blaze-lib/blaze.git
