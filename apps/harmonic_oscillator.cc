@@ -1,4 +1,5 @@
 #include "mlmcpi/proposals/random_walk.hh"
+#include "mlmcpi/samplers/random_walk_sampler.hh"
 #include "mlmcpi/sampling/distributions.hh"
 #include "mlmcpi/sampling/single_level_mcmc.hh"
 
@@ -61,15 +62,18 @@ int main(int argc, char *argv[]) {
   const double delta_t = data["delta_t"];
   const int N = T / delta_t;
 
+  std::cout << "Using path length N = " << N << std::endl;
+
   auto action = std::make_shared<harmonic_oscillator_action>();
   action->delta_t = delta_t;
 
   const blaze::DynamicMatrix<double> Sigma =
       0.08 * blaze::IdentityMatrix<double>(N);
-  auto proposal =
-      std::make_shared<mlmcpi::random_walk_proposal<>>(Sigma, engine);
+  auto single_step_sampler =
+      std::make_shared<mlmcpi::random_walk_sampler<harmonic_oscillator_action>>(
+          Sigma, action, engine);
 
-  mlmcpi::single_level_mcmc sampler(action, proposal);
+  mlmcpi::single_level_mcmc sampler(single_step_sampler);
   auto initial_path = blaze::zero<double>(N);
 
   const int n_burnin = data["n_burnin"];
