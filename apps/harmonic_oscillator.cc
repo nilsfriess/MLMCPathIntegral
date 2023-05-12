@@ -1,7 +1,5 @@
-#include "mlmcpi/proposals/random_walk.hh"
+#include "mlmcpi/monte_carlo/single_level_mcmc.hh"
 #include "mlmcpi/samplers/random_walk_sampler.hh"
-#include "mlmcpi/sampling/distributions.hh"
-#include "mlmcpi/sampling/single_level_mcmc.hh"
 
 #include <blaze/Blaze.h>
 
