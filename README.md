@@ -3,7 +3,7 @@ This repository contains a C++20 library to compute expected values for quantum 
 
 ## Prerequisites
 To compile the examples you need:
-+ A C++20 compiler (e.g., clang++ 15 or higher)
++ A C++20 compiler (The examples were tested with clang++-15 and g++-13)
 + CMake
 + A BLAS installation
 + A LAPACK installation
