@@ -16,11 +16,11 @@ template <typename Action, typename MatrixType = blaze::DynamicMatrix<double>,
 struct random_walk_sampler {
   using PathType = typename Action::PathType;
 
-  random_walk_sampler(const MatrixType &sigma, std::shared_ptr<Action> action,
-                      std::shared_ptr<Engine> rand_engine)
-      : sigma(sigma), inv_sigma(blaze::inv(sigma)),
-        det_sigma(blaze::det(sigma)), engine(std::move(rand_engine)),
-        action(std::move(action)) {
+  random_walk_sampler(const MatrixType &sigma_, std::shared_ptr<Action> action_,
+                      std::shared_ptr<Engine> engine_)
+      : sigma{sigma_}, inv_sigma{blaze::inv(sigma)}, det_sigma{blaze::det(
+                                                         sigma)},
+        engine{std::move(engine_)}, action{std::move(action_)} {
     cholL = sigma;
     blaze::potrf(cholL, 'L'); // Compute Cholesky decomposition of Sigma
   }

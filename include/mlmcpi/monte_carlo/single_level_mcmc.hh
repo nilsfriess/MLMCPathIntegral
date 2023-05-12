@@ -13,8 +13,8 @@ namespace mlmcpi {
 template <typename Sampler> struct single_level_mcmc {
   using PathType = typename Sampler::PathType;
 
-  single_level_mcmc(std::shared_ptr<Sampler> sampler)
-      : sampler{std::move(sampler)} {}
+  single_level_mcmc(std::shared_ptr<Sampler> sampler_)
+      : sampler{std::move(sampler_)} {}
 
   sample_result<PathType> sample(std::size_t n_burnin, std::size_t n_samples,
                                  PathType initial_path) {
@@ -37,11 +37,12 @@ template <typename Sampler> struct single_level_mcmc {
         accepted_samples++;
     }
 
-    samples.erase(samples.begin(), samples.begin() + n_burnin);
+    samples.erase(samples.begin(),
+                  samples.begin() + static_cast<long int>(n_burnin));
 
     sample_result<PathType> res;
     res.samples = samples;
-    res.acceptance_rate = accepted_samples / static_cast<double>(n_samples);
+    res.acceptance_rate = (1.0 * accepted_samples) / n_samples;
     return res;
   }
 

@@ -16,13 +16,13 @@ struct harmonic_oscillator_action {
 
   double evaluate(const PathType &path) const {
     // First term is computed separately using periodic BCs
-    const auto dxdt = (path[0] - path[path.size() - 1]) / delta_t;
-    const auto dxdt2 = dxdt * dxdt;
+    auto dxdt = (path[0] - path[path.size() - 1]) / delta_t;
+    auto dxdt2 = dxdt * dxdt;
     double res = (dxdt2 + mu2 * path[0] * path[0]);
 
     for (std::size_t i = 1; i < path.size(); ++i) {
-      const auto dxdt = (path[i] - path[i - 1]) / delta_t;
-      const auto dxdt2 = dxdt * dxdt;
+      dxdt = (path[i] - path[i - 1]) / delta_t;
+      dxdt2 = dxdt * dxdt;
       res += dxdt2 + mu2 * path[i] * path[i];
     }
     return 0.5 * m0 * delta_t * res;
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
   const double T = data["T"];
   const double delta_t = data["delta_t"];
-  const int N = T / delta_t;
+  const std::size_t N = T / delta_t;
 
   std::cout << "Using path length N = " << N << std::endl;
 
@@ -74,8 +74,8 @@ int main(int argc, char *argv[]) {
   mlmcpi::single_level_mcmc sampler(single_step_sampler);
   auto initial_path = blaze::zero<double>(N);
 
-  const int n_burnin = data["n_burnin"];
-  const int n_samples = data["n_samples"];
+  const std::size_t n_burnin = data["n_burnin"];
+  const std::size_t n_samples = data["n_samples"];
   auto sample_res = sampler.sample(n_burnin, n_samples, initial_path);
   auto samples = sample_res.samples;
   auto acceptance_rate = sample_res.acceptance_rate;
