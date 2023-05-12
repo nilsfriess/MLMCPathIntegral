@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.12)
 
 project(MLMCPathIntegral VERSION 0.0.1 LANGUAGES CXX)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 add_library(MLMCPathIntegral INTERFACE)
 target_include_directories(MLMCPathIntegral INTERFACE include)
 target_include_directories(MLMCPathIntegral SYSTEM INTERFACE external/blaze)
