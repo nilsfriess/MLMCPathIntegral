@@ -15,7 +15,7 @@ target_compile_options(MLMCPathIntegral INTERFACE -pedantic -Wall -Wextra -Wcast
 find_package(LAPACK REQUIRED)
 target_link_libraries(MLMCPathIntegral INTERFACE LAPACK::LAPACK)
 
-add_executable(harmonic_oscillator apps/harmonic_oscillator.cc)
+add_executable(harmonic_oscillator examples/harmonic_oscillator.cc)
 target_include_directories(harmonic_oscillator PRIVATE external/json/single_include)
 target_link_libraries(harmonic_oscillator PRIVATE MLMCPathIntegral)                    
  
