@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mlmcpi/common/mcmc_result.hh"
 #include "mlmcpi/common/sample_result.hh"
 
 #include <iostream>
@@ -13,41 +14,35 @@ namespace mlmcpi {
 template <typename Sampler> struct single_level_mcmc {
   using PathType = typename Sampler::PathType;
 
-  single_level_mcmc(std::shared_ptr<Sampler> sampler_)
-      : sampler{std::move(sampler_)} {}
+  single_level_mcmc(std::shared_ptr<Sampler> sampler_) : sampler{std::move(sampler_)} {}
 
-  sample_result<PathType> sample(std::size_t n_burnin, std::size_t n_samples,
-                                 PathType initial_path) {
-    std::vector<PathType> samples;
-    samples.reserve(n_burnin + n_samples);
-    samples.push_back(initial_path);
+  template <typename QOI>
+  mcmc_result<typename QOI::ResultType> run(std::size_t n_burnin, std::size_t n_samples,
+                                            PathType initial_path) {
+    QOI qoi;
+    mcmc_result<typename QOI::ResultType> result{n_samples};
 
-    std::default_random_engine generator;
-    std::uniform_real_distribution<double> unif_dist;
-
-    std::size_t accepted_samples = 0;
-
-    for (std::size_t i = 1; i < n_burnin + n_samples; ++i) {
-      const auto current = samples.at(i - 1);
+    auto current = initial_path;
+    for (std::size_t i = 1; i < n_burnin; ++i) {
       const auto proposal = sampler->perform_step(current);
-
-      samples.push_back(proposal.value_or(current));
-
-      if (proposal && (i > n_burnin))
-        accepted_samples++;
+      current = proposal.value_or(current);
     }
 
-    samples.erase(samples.begin(),
-                  samples.begin() + static_cast<long int>(n_burnin));
+    for (std::size_t i = n_burnin; i < n_burnin + n_samples; ++i) {
+      const auto proposal = sampler->perform_step(current);
+      current = proposal.value_or(current);
 
-    sample_result<PathType> res;
-    res.samples = samples;
-    res.acceptance_rate = (1.0 * accepted_samples) / n_samples;
-    return res;
+      result.add_sample(qoi(current), proposal.has_value());
+    }
+
+    return result;
   }
 
 private:
   std::shared_ptr<Sampler> sampler;
+
+  std::default_random_engine generator;
+  std::uniform_real_distribution<double> unif_dist;
 };
 
 } // namespace mlmcpi

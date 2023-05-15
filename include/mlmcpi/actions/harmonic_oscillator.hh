@@ -2,6 +2,8 @@
 
 #include <blaze/Blaze.h>
 
+namespace mlmcpi {
+
 struct harmonic_oscillator_action {
   using PathType = blaze::DynamicVector<double>;
 
@@ -51,3 +53,5 @@ struct harmonic_oscillator_action {
   constexpr static double m0 = 1;
   constexpr static double mu2 = 1;
 };
+
+} // namespace mlmcpi
