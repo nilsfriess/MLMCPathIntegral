@@ -1,11 +1,16 @@
 #pragma once
 
 #include <blaze/Blaze.h>
+#include <memory>
 
 namespace mlmcpi {
 
 struct harmonic_oscillator_action {
   using PathType = blaze::DynamicVector<double>;
+
+  harmonic_oscillator_action(double delta_t_) noexcept
+      : delta_t(delta_t_), W_curvature_((2. / delta_t + delta_t * mu2) * m0),
+        W_minimum_scaling(0.5 / (1. + 0.5 * delta_t * delta_t * mu2)) {}
 
   double evaluate(const PathType &path) const {
     // First term is computed separately using periodic BCs
@@ -40,15 +45,29 @@ struct harmonic_oscillator_action {
 
   double analytic_solution(std::size_t path_length) const {
     double R = 1. + 0.5 * delta_t * delta_t * mu2 -
-               delta_t * std::sqrt(mu2) *
-                   std::sqrt(1. + 0.25 * delta_t * delta_t * mu2);
+               delta_t * std::sqrt(mu2) * std::sqrt(1. + 0.25 * delta_t * delta_t * mu2);
     return 1. /
-           (2. * m0 * std::sqrt(mu2) *
-            std::sqrt(1 + 0.25 * delta_t * delta_t * mu2)) *
+           (2. * m0 * std::sqrt(mu2) * std::sqrt(1 + 0.25 * delta_t * delta_t * mu2)) *
            (1. + std::pow(R, path_length)) / (1. - std::pow(R, path_length));
   }
 
+  inline double W_curvature(double /*x_m*/, double /*x_p*/) const { return W_curvature_; }
+  inline double W_minimum(double x_m, double x_p) const {
+    return W_minimum_scaling * (x_m + x_p);
+  }
+
+  std::unique_ptr<harmonic_oscillator_action>
+  make_coarsened_action(double factor = 2) const {
+    auto coarse_action = std::make_unique<harmonic_oscillator_action>(*this);
+    coarse_action->delta_t *= factor;
+    return coarse_action;
+  }
+
+private:
   double delta_t;
+
+  double W_curvature_;
+  double W_minimum_scaling;
 
   constexpr static double m0 = 1;
   constexpr static double mu2 = 1;

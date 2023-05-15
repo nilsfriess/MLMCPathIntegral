@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+
 namespace mlmcpi {
 template <typename Action> struct sampler {
   using PathType = typename Action::PathType;

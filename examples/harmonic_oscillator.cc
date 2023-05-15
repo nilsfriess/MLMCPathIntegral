@@ -37,9 +37,7 @@ int main(int argc, char *argv[]) {
 
   // std::cout << "Using path length N = " << N << std::endl;
 
-  auto action     = std::make_shared<harmonic_oscillator_action>();
-  action->delta_t = delta_t;
-
+  auto action = std::make_shared<harmonic_oscillator_action>(delta_t);
   std::shared_ptr<sampler<harmonic_oscillator_action>> single_step_sampler;
 
   if (params["sampler"] == "random_walk") {

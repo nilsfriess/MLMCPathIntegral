@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 project(MLMCPathIntegral VERSION 0.0.1 LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release")
+    set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
 add_library(MLMCPathIntegral INTERFACE)
@@ -16,6 +16,13 @@ find_package(LAPACK REQUIRED)
 target_link_libraries(MLMCPathIntegral INTERFACE LAPACK::LAPACK)
 
 add_executable(harmonic_oscillator examples/harmonic_oscillator.cc)
-target_include_directories(harmonic_oscillator PRIVATE external/json/single_include)
-target_link_libraries(harmonic_oscillator PRIVATE MLMCPathIntegral)                    
+target_include_directories(harmonic_oscillator SYSTEM PRIVATE external/json/single_include)
+target_link_libraries(harmonic_oscillator PRIVATE MLMCPathIntegral)
+
+add_executable(harmonic_oscillator_two_level examples/harmonic_oscillator_two_level.cc)
+# # target_include_directories(harmonic_oscillator PRIVATE external/json/single_include)
+target_link_libraries(harmonic_oscillator_two_level PRIVATE MLMCPathIntegral)
+
+# add_executable(test_partition tests/partition_test.cc)
+# target_link_libraries(test_partition PRIVATE MLMCPathIntegral)
  
