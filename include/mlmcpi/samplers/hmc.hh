@@ -62,7 +62,7 @@ struct hmc_sampler : sampler<Action> {
   }
 
   std::optional<double> autotune_stepsize(const PathType &initial_path,
-                                          double acceptance_rate_target = 0.8) {
+                                          double acceptance_rate_target = 0.85) {
     const std::size_t n_samples = 1000;
     const std::size_t n_repetitions = 100;
     const double dt_initial = dt;

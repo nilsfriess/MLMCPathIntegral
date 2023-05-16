@@ -26,7 +26,6 @@ public:
       const auto x_p = even_points[i + 1];
       const auto x_min = action->W_minimum(x_m, x_p);
       const auto sigma = 1. / std::sqrt(action->W_curvature(x_m, x_p));
-
       odd_points[i] = x_min + normal_dist(*engine) * sigma;
     }
 
@@ -41,10 +40,7 @@ public:
     return odd_points;
   }
 
-  double log_density(const PathType &odd_points, const PathType &even_points) const {
-    assert(odd_points.size() == even_points.size());
-
-    const auto path = combine_odd_even(odd_points, even_points);
+  double log_density(const PathType &path) const {
     const auto size = path.size();
 
     auto x_m = path[size - 2];
@@ -60,6 +56,7 @@ public:
       curvature = action->W_curvature(x_m, x_p);
       S += 0.5 * curvature * dx * dx - 0.5 * std::log(curvature);
     }
+
     return S;
   }
 
