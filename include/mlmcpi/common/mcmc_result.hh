@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <numeric>
 #include <vector>
@@ -18,8 +19,8 @@ public:
   }
 
   DataT mean() const {
-    const auto sum = std::reduce(samples.begin(), samples.end(), DataT{0},
-                                 std::plus<DataT>{});
+    const auto sum =
+        std::reduce(samples.begin(), samples.end(), DataT{0}, std::plus<DataT>{});
     return 1. / samples.size() * sum;
   }
 
@@ -33,8 +34,21 @@ public:
     return 1. / (samples.size() - 1) * sum_sq;
   }
 
-  double acceptance_rate() const {
-    return (1. * accepted_samples) / samples.size();
+  double acceptance_rate() const { return (1. * accepted_samples) / samples.size(); }
+
+  std::size_t integrated_autocorr_time(std::size_t window_size = 20) const {
+    const auto rho = [&](std::size_t s) {
+      double sum = 0;
+      for (std::size_t j = 1; j < samples.size() - s; ++j)
+        sum += samples[j] * samples[j + s];
+      return (samples.size() - s) * sum;
+    };
+
+    double sum = 0;
+    const auto rho_zero = rho(0);
+    for (std::size_t s = 1; s < window_size; ++s)
+      sum += rho(s) / rho_zero;
+    return static_cast<std::size_t>(std::ceil(1 + 2 * sum));
   }
 
 private:

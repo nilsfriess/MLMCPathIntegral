@@ -1,7 +1,7 @@
 #include "mlmcpi/actions/harmonic_oscillator.hh"
 #include "mlmcpi/monte_carlo/single_level_mcmc.hh"
-#include "mlmcpi/proposals/hmc.hh"
 #include "mlmcpi/qoi/mean_displacement.hh"
+#include "mlmcpi/samplers/hmc.hh"
 #include "mlmcpi/samplers/random_walk_sampler.hh"
 #include "mlmcpi/samplers/sampler.hh"
 
@@ -32,10 +32,11 @@ int main(int argc, char *argv[]) {
   json params = json::parse(params_file);
 
   const double T       = params["T"];
-  const double delta_t = params["delta_t"];
-  const std::size_t N  = T / delta_t;
+  const std::size_t N  = params["N"];
+  const double delta_t = T / N;
 
   // std::cout << "Using path length N = " << N << std::endl;
+  const auto initial_path = blaze::ZeroVector<double>(N);
 
   auto action = std::make_shared<harmonic_oscillator_action>(delta_t);
   std::shared_ptr<sampler<harmonic_oscillator_action>> single_step_sampler;
@@ -47,7 +48,15 @@ int main(int argc, char *argv[]) {
                                                                           engine);
   } else if (params["sampler"] == "hmc") {
     single_step_sampler =
-        std::make_shared<hmc_sampler<harmonic_oscillator_action>>(action, engine);
+        std::make_shared<hmc_sampler<harmonic_oscillator_action>>(0.1, action, engine);
+    auto tuned_value =
+        static_cast<hmc_sampler<harmonic_oscillator_action> *>(single_step_sampler.get())
+            ->autotune_stepsize(initial_path, 0.8);
+    if (tuned_value)
+      std::cout << "Autotuned HMC sampler successfully with dt = " << tuned_value.value()
+                << "\n";
+    else
+      std::cout << "Failed to autotune HMC sampler\n";
   } else {
     std::cerr << "Sampler " << params["sampler"] << " not implemented." << std::endl;
     return -1;
@@ -55,7 +64,6 @@ int main(int argc, char *argv[]) {
 
   const std::size_t n_burnin  = params["n_burnin"];
   const std::size_t n_samples = params["n_samples"];
-  const auto initial_path     = blaze::ZeroVector<double>(N);
 
   using QOI = mean_displacement<harmonic_oscillator_action::PathType>;
   single_level_mcmc sampler(single_step_sampler);
@@ -64,8 +72,10 @@ int main(int argc, char *argv[]) {
   const auto mean     = result.mean();
   const auto var      = result.variance();
   const auto acc_rate = result.acceptance_rate();
+  const auto autocorr = result.integrated_autocorr_time();
 
   std::cout << "Result   = " << mean << " ± " << var << std::endl;
   std::cout << "Analytic = " << action->analytic_solution(N) << std::endl;
   std::cout << "Acceptance rate = " << acc_rate << std::endl;
+  std::cout << "Autocorrelation = " << autocorr << std::endl;
 }
