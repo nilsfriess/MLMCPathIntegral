@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
   std::random_device rd;
   using Engine = std::mt19937_64;
-  auto engine  = std::make_shared<Engine>(rd());
+  Engine engine{rd()};
 
   std::ifstream params_file(argv[1]);
   json params = json::parse(params_file);
@@ -43,21 +43,18 @@ int main(int argc, char *argv[]) {
   using OddEvenCond   = gaussian_even_odd_conditional<Action, Engine>;
   using Sampler       = two_level_sampler<Action, CoarseSampler, OddEvenCond, Engine>;
 
-  auto action = std::make_shared<Action>(delta_t);
+  Action action{delta_t};
+  auto coarse_action = action.make_coarsened_action();
 
-  std::shared_ptr<Action> coarse_action = action->make_coarsened_action();
+  CoarseSampler coarse_sampler{0.1, coarse_action, engine};
+  OddEvenCond even_odd_conditional{action, engine};
 
-  auto coarse_sampler = std::make_shared<CoarseSampler>(0.1, coarse_action, engine);
-
-  auto even_odd_conditional = std::make_shared<OddEvenCond>(action, engine);
-
-  auto sampler =
-      std::make_shared<Sampler>(action, coarse_sampler, even_odd_conditional, engine);
+  Sampler sampler{action, coarse_sampler, even_odd_conditional, engine};
 
   single_level_mcmc mcmc(sampler);
 
   blaze::DynamicVector<double> initial_path = blaze::ZeroVector<double>(N);
-  auto tuned_value = coarse_sampler->autotune_stepsize(initial_path, 0.8);
+  auto tuned_value = coarse_sampler.autotune_stepsize(initial_path, 0.8);
   if (tuned_value)
     std::cout << "Autotuned HMC sampler successfully with dt = " << tuned_value.value()
               << "\n";

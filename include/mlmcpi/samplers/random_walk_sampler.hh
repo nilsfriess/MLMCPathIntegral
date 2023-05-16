@@ -17,11 +17,12 @@ template <typename Action, typename MatrixType = blaze::DynamicMatrix<double>,
 struct random_walk_sampler : sampler<Action> {
   using PathType = typename Action::PathType;
 
-  random_walk_sampler(const MatrixType &sigma_, std::shared_ptr<Action> action_,
-                      std::shared_ptr<Engine> engine_)
-      : sigma{sigma_}, inv_sigma{blaze::inv(sigma)}, det_sigma{blaze::det(
-                                                         sigma)},
-        engine{std::move(engine_)}, action{std::move(action_)} {
+  random_walk_sampler(const MatrixType &sigma_, Action &action_, Engine &engine_)
+      : sigma{sigma_},
+        inv_sigma{blaze::inv(sigma)},
+        det_sigma{blaze::det(sigma)},
+        engine{std::move(engine_)},
+        action{std::move(action_)} {
     cholL = sigma;
     blaze::potrf(cholL, 'L'); // Compute Cholesky decomposition of Sigma
   }
@@ -29,10 +30,9 @@ struct random_walk_sampler : sampler<Action> {
   std::optional<PathType> perform_step(const PathType &current) override {
     const auto proposal = generate_proposal(current);
 
-    const auto log_acceptance_prob = action->evaluate(proposal) -
-                                     action->evaluate(current) +
-                                     std::log(density(proposal, current)) -
-                                     std::log(density(current, proposal));
+    const auto log_acceptance_prob =
+        action->evaluate(proposal) - action->evaluate(current) +
+        std::log(density(proposal, current)) - std::log(density(current, proposal));
 
     if (log_acceptance_prob < 0)
       return proposal;
@@ -50,8 +50,8 @@ private:
     const std::size_t k = mean.size();
 
     auto norm_factor = 1. / std::sqrt(std::pow(2 * M_PI, k) * det_sigma);
-    auto exp_term = -0.5 * (blaze::trans(eval_point - mean) * inv_sigma *
-                            (eval_point - mean));
+    auto exp_term =
+        -0.5 * (blaze::trans(eval_point - mean) * inv_sigma * (eval_point - mean));
 
     return norm_factor * std::exp(exp_term);
   }

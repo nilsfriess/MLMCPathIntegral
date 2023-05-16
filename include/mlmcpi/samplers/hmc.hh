@@ -15,16 +15,17 @@ template <typename Action, typename Engine = std::mt19937>
 struct hmc_sampler : sampler<Action> {
   using PathType = blaze::DynamicVector<double>;
 
-  hmc_sampler(double stepsize, std::shared_ptr<Action> action_,
-              std::shared_ptr<Engine> engine_)
-      : dt{stepsize}, action{std::move(action_)}, engine{std::move(engine_)} {}
+  hmc_sampler(double stepsize, Action &action_, Engine &engine_)
+      : dt{stepsize},
+        action{action_},
+        engine{engine_} {}
 
   std::optional<PathType> perform_step(const PathType &current) override {
     auto position = current;
     // Generate random initial momentum
     PathType momentum(current.size());
     std::generate(momentum.begin(), momentum.end(),
-                  [&]() { return normal_dist(*engine); });
+                  [&]() { return normal_dist(engine); });
 
     auto initial_kinetic = 0.5 * blaze::sqrNorm(momentum);
 
@@ -40,14 +41,14 @@ struct hmc_sampler : sampler<Action> {
         dt_position = 0;
       }
 
-      auto force = action->evaluate_force(position);
+      auto force = action.evaluate_force(position);
       momentum -= dt_momentum * force;
       position += dt_position * momentum;
     }
 
     auto final_kinetic = 0.5 * blaze::sqrNorm(momentum);
 
-    const auto delta_S = action->evaluate(position) - action->evaluate(current);
+    const auto delta_S = action.evaluate(position) - action.evaluate(current);
     const auto delta_T = final_kinetic - initial_kinetic;
     const auto delta_H = delta_S + delta_T;
 
@@ -55,7 +56,7 @@ struct hmc_sampler : sampler<Action> {
       return position;
 
     auto acceptance_prob = std::exp(-delta_H);
-    if (unif_dist(*engine) < acceptance_prob)
+    if (unif_dist(engine) < acceptance_prob)
       return position;
     else
       return {};
@@ -108,9 +109,9 @@ struct hmc_sampler : sampler<Action> {
 private:
   double dt;
 
-  std::shared_ptr<Action> action;
+  Action &action;
 
-  std::shared_ptr<Engine> engine;
+  Engine &engine;
   std::normal_distribution<double> normal_dist;
 
   std::uniform_real_distribution<double> unif_dist;

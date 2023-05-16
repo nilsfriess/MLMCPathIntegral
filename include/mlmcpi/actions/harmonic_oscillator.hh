@@ -9,7 +9,8 @@ struct harmonic_oscillator_action {
   using PathType = blaze::DynamicVector<double>;
 
   harmonic_oscillator_action(double delta_t_) noexcept
-      : delta_t(delta_t_), W_curvature_((2. / delta_t + delta_t * mu2) * m0),
+      : delta_t(delta_t_),
+        W_curvature_((2. / delta_t + delta_t * mu2) * m0),
         W_minimum_scaling(0.5 / (1. + 0.5 * delta_t * delta_t * mu2)) {}
 
   double evaluate(const PathType &path) const {
@@ -56,10 +57,9 @@ struct harmonic_oscillator_action {
     return W_minimum_scaling * (x_m + x_p);
   }
 
-  std::unique_ptr<harmonic_oscillator_action>
-  make_coarsened_action(double factor = 2) const {
-    auto coarse_action = std::make_unique<harmonic_oscillator_action>(*this);
-    coarse_action->delta_t *= factor;
+  harmonic_oscillator_action make_coarsened_action(double factor = 2) const {
+    auto coarse_action(*this);
+    coarse_action.delta_t *= factor;
     return coarse_action;
   }
 
