@@ -51,9 +51,9 @@ public:
     return static_cast<std::size_t>(std::ceil(1 + 2 * sum));
   }
 
-private:
   std::vector<DataT> samples;
 
+private:
   std::size_t accepted_samples = 0;
 };
 } // namespace mlmcpi
