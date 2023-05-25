@@ -36,12 +36,14 @@ public:
 
   double acceptance_rate() const { return (1. * accepted_samples) / samples.size(); }
 
-  std::size_t integrated_autocorr_time(std::size_t window_size = 20) const {
-    const auto rho = [&](std::size_t s) {
+  std::size_t integrated_autocorr_time(std::size_t window_size = 200) const {
+    const auto m = mean();
+
+    const auto rho = [&](std::size_t s) -> double {
       double sum = 0;
       for (std::size_t j = 1; j < samples.size() - s; ++j)
-        sum += samples[j] * samples[j + s];
-      return (samples.size() - s) * sum;
+        sum += (samples[j] - m) * (samples[j + s] - m);
+      return 1. / (samples.size() - s) * sum;
     };
 
     double sum = 0;
