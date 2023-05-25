@@ -7,7 +7,6 @@
 #include <blaze/math/expressions/Forward.h>
 #include <blaze/math/lapack/potrf.h>
 
-#include <memory>
 #include <optional>
 #include <random>
 
@@ -31,14 +30,14 @@ struct random_walk_sampler : sampler<Action> {
     const auto proposal = generate_proposal(current);
 
     const auto log_acceptance_prob =
-        action->evaluate(proposal) - action->evaluate(current) +
+        action.evaluate(proposal) - action.evaluate(current) +
         std::log(density(proposal, current)) - std::log(density(current, proposal));
 
     if (log_acceptance_prob < 0)
       return proposal;
 
     auto acceptance_prob = std::exp(-log_acceptance_prob);
-    if (unif_dist(*engine) < acceptance_prob)
+    if (unif_dist(engine) < acceptance_prob)
       return proposal;
     else
       return {};
@@ -59,7 +58,7 @@ private:
   [[nodiscard]] inline PathType generate_proposal(const PathType &mean) {
     blaze::DynamicVector<double> normal_samples(mean.size());
     std::generate(normal_samples.begin(), normal_samples.end(),
-                  [&]() { return normal_dist(*engine); });
+                  [&]() { return normal_dist(engine); });
     return mean + blaze::decllow(sigma) * normal_samples;
   }
 
@@ -68,10 +67,10 @@ private:
   double det_sigma;
   MatrixType cholL; // Lower part of cholesky decomposition of sigma
 
-  std::shared_ptr<Engine> engine;
+  Engine engine;
   std::normal_distribution<double> normal_dist;
 
-  std::shared_ptr<Action> action;
+  Action action;
 
   std::uniform_real_distribution<double> unif_dist;
 };
