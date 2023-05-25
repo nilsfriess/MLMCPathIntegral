@@ -18,10 +18,14 @@ public:
       accepted_samples++;
   }
 
-  DataT mean() const {
+  DataT mean(DataT zero = DataT{0}) const {
     const auto sum =
-        std::reduce(samples.begin(), samples.end(), DataT{0}, std::plus<DataT>{});
+        std::reduce(samples.begin(), samples.end(), zero, std::plus<DataT>{});
     return 1. / samples.size() * sum;
+  }
+
+  DataT mean_error() const {
+    return std::sqrt(((1.0 * integrated_autocorr_time()) / samples.size()) * variance());
   }
 
   DataT variance() const {

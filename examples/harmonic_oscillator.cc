@@ -62,11 +62,11 @@ int main(int argc, char *argv[]) {
   const auto result = sampler.run<QOI>(n_burnin, n_samples, initial_path);
 
   const auto mean     = result.mean();
-  const auto var      = result.variance();
+  const auto mean_err = result.mean_error();
   const auto acc_rate = result.acceptance_rate();
   const auto autocorr = result.integrated_autocorr_time();
 
-  std::cout << "Result   = " << mean << " ± " << var << std::endl;
+  std::cout << "Result   = " << mean << " ± " << mean_err << std::endl;
   std::cout << "Analytic = " << action.analytic_solution(N) << std::endl;
   std::cout << "Acceptance rate = " << acc_rate << std::endl;
   std::cout << "Autocorrelation = " << autocorr << std::endl;
