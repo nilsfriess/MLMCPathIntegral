@@ -1,9 +1,10 @@
 {
     "n_burnin": 1000,
-    "n_samples": 10000,
+    "n_samples": 32000,
 
     "T": 4,
-    "N": 128,
+    "N": 256,
 
-    "sampler": "hmc"
+    "m0": 1,
+    "mu2": 1
 }

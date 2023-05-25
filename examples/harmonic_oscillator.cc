@@ -6,7 +6,6 @@
 #include "mlmcpi/samplers/sampler.hh"
 
 #include <blaze/Blaze.h>
-
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
@@ -33,6 +32,9 @@ int main(int argc, char *argv[]) {
   std::ifstream params_file(argv[1]);
   json params = json::parse(params_file);
 
+  const double m0  = params["m0"];
+  const double mu2 = params["mu2"];
+
   const double T       = params["T"];
   const std::size_t N  = params["N"];
   const double delta_t = T / N;
@@ -41,7 +43,7 @@ int main(int argc, char *argv[]) {
   const auto initial_path = blaze::ZeroVector<double>(N);
 
   using Action = harmonic_oscillator_action;
-  Action action{delta_t};
+  Action action{delta_t, m0, mu2};
 
   hmc_sampler<harmonic_oscillator_action, Engine> single_step_sampler{0.1, action,
                                                                       engine};
