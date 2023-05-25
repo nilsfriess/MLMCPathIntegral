@@ -8,8 +8,10 @@ namespace mlmcpi {
 struct harmonic_oscillator_action {
   using PathType = blaze::DynamicVector<double>;
 
-  harmonic_oscillator_action(double delta_t_) noexcept
+  harmonic_oscillator_action(double delta_t_, double m0_ = 1., double mu2_ = 1.) noexcept
       : delta_t(delta_t_),
+        m0{m0_},
+        mu2{mu2_},
         W_curvature_((2. / delta_t + delta_t * mu2) * m0),
         W_minimum_scaling(0.5 / (1. + 0.5 * delta_t * delta_t * mu2)) {}
 
@@ -66,11 +68,11 @@ struct harmonic_oscillator_action {
 private:
   double delta_t;
 
+  double m0;
+  double mu2;
+
   double W_curvature_;
   double W_minimum_scaling;
-
-  constexpr static double m0 = 1;
-  constexpr static double mu2 = 1;
 };
 
 } // namespace mlmcpi
