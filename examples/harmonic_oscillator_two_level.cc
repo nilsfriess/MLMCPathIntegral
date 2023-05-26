@@ -17,6 +17,11 @@ using json = nlohmann::json;
 
 using namespace mlmcpi;
 
+#if USE_BLAZE
+using Path     = blaze::DynamicVector<double>;
+using ZeroPath = blaze::ZeroVector<double>;
+#endif
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     std::cerr << "Provide parameter file as argument" << std::endl;
@@ -38,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   double delta_t = T / N;
 
-  using Action        = harmonic_oscillator_action;
+  using Action        = harmonic_oscillator_action<Path>;
   using CoarseSampler = hmc_sampler<Action, Engine>;
   using OddEvenCond   = gaussian_even_odd_conditional<Action, Engine>;
   using Sampler       = two_level_sampler<Action, CoarseSampler, OddEvenCond, Engine>;
@@ -53,19 +58,26 @@ int main(int argc, char *argv[]) {
 
   single_level_mcmc mcmc(sampler);
 
-  blaze::DynamicVector<double> initial_path = blaze::ZeroVector<double>(N);
-  auto tuned_value = coarse_sampler.autotune_stepsize(initial_path, 0.8);
-  if (tuned_value)
-    std::cout << "Autotuned HMC sampler successfully with dt = " << tuned_value.value()
-              << "\n";
-  else
-    std::cout << "Failed to autotune HMC sampler\n";
+  Path initial_path = ZeroPath(N);
+  auto tuned_value  = coarse_sampler.autotune_stepsize(initial_path, 0.8);
+  // if (tuned_value)
+  //   std::cout << "Autotuned HMC sampler successfully with dt = " << tuned_value.value()
+  //             << "\n";
+  // else
+  //   std::cout << "Failed to autotune HMC sampler\n";
 
-  using QOI = mean_displacement<harmonic_oscillator_action::PathType>;
+  using QOI = mean_displacement<Path>;
   auto res  = mcmc.run<QOI>(n_burnin, n_samples, initial_path);
 
-  std::cout << "Mean      = " << res.mean() << std::endl;
+  std::cout << "Mean      = " << res.mean() << " ± " << res.mean_error() << std::endl;
+  std::cout << "Anayltic  = " << action.analytic_solution(N) << std::endl;
   std::cout << "Var       = " << res.variance() << std::endl;
   std::cout << "acc_rate  = " << res.acceptance_rate() << std::endl;
   std::cout << "auto_corr = " << res.integrated_autocorr_time() << std::endl;
+
+  // for (const auto &sample : res.samples) {
+  //   for (const auto &entry : sample)
+  //     std::cout << entry << " ";
+  //   std::cout << "\n";
+  // }
 }
