@@ -18,6 +18,11 @@ using json = nlohmann::json;
 
 using namespace mlmcpi;
 
+#if USE_BLAZE
+using Path     = blaze::DynamicVector<double>;
+using ZeroPath = blaze::ZeroVector<double>;
+#endif
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     std::cerr << "Provide parameter file as argument" << std::endl;
@@ -39,25 +44,18 @@ int main(int argc, char *argv[]) {
   const std::size_t N  = params["N"];
   const double delta_t = T / N;
 
-  // std::cout << "Using path length N = " << N << std::endl;
-  const auto initial_path = blaze::ZeroVector<double>(N);
+  const auto initial_path = ZeroPath(N);
 
-  using Action = harmonic_oscillator_action;
+  using Action = harmonic_oscillator_action<Path>;
   Action action{delta_t, m0, mu2};
 
-  hmc_sampler<harmonic_oscillator_action, Engine> single_step_sampler{0.1, action,
-                                                                      engine};
-  auto tuned_value = single_step_sampler.autotune_stepsize(initial_path, 0.8);
-  if (tuned_value)
-    std::cout << "Autotuned HMC sampler successfully with dt = " << tuned_value.value()
-              << "\n";
-  else
-    std::cout << "Failed to autotune HMC sampler\n";
+  hmc_sampler<Action, Engine> single_step_sampler{0.1, action, engine};
+  single_step_sampler.autotune_stepsize(initial_path, 0.8);
 
   const std::size_t n_burnin  = params["n_burnin"];
   const std::size_t n_samples = params["n_samples"];
 
-  using QOI = mean_displacement<harmonic_oscillator_action::PathType>;
+  using QOI = mean_displacement<Action::PathType>;
   single_level_mcmc sampler{single_step_sampler};
   const auto result = sampler.run<QOI>(n_burnin, n_samples, initial_path);
 
@@ -69,5 +67,5 @@ int main(int argc, char *argv[]) {
   std::cout << "Result   = " << mean << " ± " << mean_err << std::endl;
   std::cout << "Analytic = " << action.analytic_solution(N) << std::endl;
   std::cout << "Acceptance rate = " << acc_rate << std::endl;
-  std::cout << "Autocorrelation = " << autocorr << std::endl;
+  std::cout << "Autocorr. time  = " << autocorr << std::endl;
 }
