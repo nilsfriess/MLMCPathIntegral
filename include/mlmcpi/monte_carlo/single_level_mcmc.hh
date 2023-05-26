@@ -4,7 +4,9 @@
 #include "mlmcpi/common/sample_result.hh"
 #include "mlmcpi/qoi/identity.hh"
 
+#include <cmath>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <random>
 #include <utility>
@@ -18,10 +20,10 @@ template <typename Sampler> struct single_level_mcmc {
   single_level_mcmc(Sampler &sampler_) : sampler{sampler_} {}
 
   template <typename QOI = mlmcpi::identity<PathType>>
-  mcmc_result<typename QOI::ResultType> run(std::size_t n_burnin, std::size_t n_samples,
-                                            PathType initial_path) {
+  mcmc_result<typename QOI::ResultType> run(std::size_t n_burnin, PathType initial_path,
+                                            double target_error = 1e-2) {
     QOI qoi;
-    mcmc_result<typename QOI::ResultType> result{n_samples};
+    mcmc_result<typename QOI::ResultType> result;
 
     auto current = initial_path;
     for (std::size_t i = 0; i < n_burnin; ++i) {
@@ -29,11 +31,35 @@ template <typename Sampler> struct single_level_mcmc {
       current = proposal.value_or(current);
     }
 
-    for (std::size_t i = 0; i < n_samples; ++i) {
+    const auto compute_required_samples = [&]() {
+      const auto autocorr_time = result.integrated_autocorr_time();
+      const auto var = result.variance();
+
+      if (autocorr_time == 0)
+        return std::numeric_limits<std::size_t>::max();
+
+      return static_cast<std::size_t>(
+          std::ceil((autocorr_time * var) / (target_error * target_error)));
+    };
+
+    std::size_t step = 1;
+    std::size_t required_samples = std::numeric_limits<std::size_t>::max();
+
+    // Check if we have enough samples for the required error every 100 steps
+    while (step <= required_samples) {
       const auto proposal = sampler.perform_step(current);
       current = proposal.value_or(current);
 
       result.add_sample(qoi(std::forward<PathType>(current)), proposal.has_value());
+
+      if (step % 100 == 0) {
+        required_samples = compute_required_samples();
+
+        if (result.mean_error() < 1e-12)
+          required_samples = std::numeric_limits<std::size_t>::max();
+      }
+
+      step++;
     }
 
     return result;
