@@ -1,12 +1,12 @@
 #pragma once
 
-#include <blaze/Blaze.h>
-#include <memory>
+#include <cmath>
+#include <cstddef>
 
 namespace mlmcpi {
 
-struct harmonic_oscillator_action {
-  using PathType = blaze::DynamicVector<double>;
+template <typename TPathType> struct harmonic_oscillator_action {
+  using PathType = TPathType;
 
   harmonic_oscillator_action(double delta_t_, double m0_ = 1., double mu2_ = 1.) noexcept
       : delta_t(delta_t_),
@@ -29,7 +29,7 @@ struct harmonic_oscillator_action {
     return 0.5 * m0 * delta_t * res;
   }
 
-  PathType evaluate_force(const PathType &path) const {
+  PathType grad_potential(const PathType &path) const {
     PathType force(path.size());
 
     double A = m0 / delta_t;
