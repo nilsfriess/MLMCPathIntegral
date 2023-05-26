@@ -15,14 +15,21 @@ target_compile_options(MLMCPathIntegral INTERFACE -pedantic -Wall -Wextra -Wcast
 find_package(LAPACK REQUIRED)
 target_link_libraries(MLMCPathIntegral INTERFACE LAPACK::LAPACK)
 
+# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+   cmake_policy(SET CMP0135 NEW)
+endif()
+include(FetchContent)
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
 add_executable(harmonic_oscillator examples/harmonic_oscillator.cc)
-target_include_directories(harmonic_oscillator SYSTEM PRIVATE external/json/single_include)
-target_link_libraries(harmonic_oscillator PRIVATE MLMCPathIntegral)
+target_link_libraries(harmonic_oscillator PRIVATE MLMCPathIntegral nlohmann_json::nlohmann_json)
 
 add_executable(harmonic_oscillator_two_level examples/harmonic_oscillator_two_level.cc)
-target_include_directories(harmonic_oscillator_two_level PRIVATE external/json/single_include)
-target_link_libraries(harmonic_oscillator_two_level PRIVATE MLMCPathIntegral)
+target_link_libraries(harmonic_oscillator_two_level PRIVATE MLMCPathIntegral nlohmann_json::nlohmann_json)
 
-# add_executable(test_partition tests/partition_test.cc)
-# target_link_libraries(test_partition PRIVATE MLMCPathIntegral)
+add_executable(banana examples/banana.cc)
+target_link_libraries(banana PRIVATE LAPACK::LAPACK)
  
