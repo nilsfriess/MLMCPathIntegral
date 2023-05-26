@@ -1,10 +1,13 @@
 {
-    "n_burnin": 1000,
-    "n_samples": 32000,
+    "n_burnin": 5000,
+    "stat_error": 1e-2,
 
     "T": 4,
     "N": 256,
 
-    "m0": 1,
-    "mu2": 1
+    "m0": 0.5,
+    "mu2": 1,
+
+    "hmc_acc_rate": 0.8
 }
+ 
