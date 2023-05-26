@@ -1,11 +1,11 @@
 #pragma once
 
 #include "mlmcpi/samplers/sampler.hh"
-#include <blaze/math/dense/DynamicMatrix.h>
-#include <blaze/math/dense/DynamicVector.h>
-#include <blaze/math/expressions/DMatDetExpr.h>
-#include <blaze/math/expressions/Forward.h>
-#include <blaze/math/lapack/potrf.h>
+
+#ifndef USE_BLAZE
+#error random_walk_sampler can current only be used with blaze libraryUSE_BLAZE
+#endif
+#include <blaze/Blaze.h>
 
 #include <optional>
 #include <random>
