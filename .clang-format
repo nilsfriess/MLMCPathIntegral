@@ -90,7 +90,7 @@ DisableFormat:   false
 EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: LogicalBlock
 ExperimentalAutoDetectBinPacking: false
-PackConstructorInitializers: BinPack
+PackConstructorInitializers: CurrentLine
 BasedOnStyle:    ''
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 AllowAllConstructorInitializersOnNextLine: true
