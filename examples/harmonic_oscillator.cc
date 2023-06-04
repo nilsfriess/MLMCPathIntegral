@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
   const double delta_t = T / N;
 
   using Action = harmonic_oscillator_action<Path>;
-  Action action{delta_t, params["m0"], params["mu2"]};
+  Action action{N, delta_t, params["m0"], params["mu2"]};
 
   hmc_sampler<Action, Engine> single_step_sampler{0.1, action, engine};
   const auto initial_path = ZeroPath(N);
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Result          = " << result.mean() << " ± " << result.mean_error()
             << "\n";
   std::cout << "|Q - Q_{exact}| = "
-            << std::abs(result.mean() - action.analytic_solution(N)) << "\n";
+            << std::abs(result.mean() - action.analytic_solution()) << "\n";
   std::cout << "Samples         = " << result.num_samples() << "\n";
   std::cout << "Acceptance rate = " << result.acceptance_rate() << "\n";
   std::cout << "Autocorr. time  = " << result.integrated_autocorr_time() << "\n";

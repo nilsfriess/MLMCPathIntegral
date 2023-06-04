@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
   using OddEvenCond   = gaussian_even_odd_conditional<Action, Engine>;
   using Sampler       = two_level_sampler<Action, CoarseSampler, OddEvenCond, Engine>;
 
-  Action action{delta_t, params["m0"], params["mu2"]};
+  Action action{N, delta_t, params["m0"], params["mu2"]};
   auto coarse_action = action.make_coarsened_action();
 
   CoarseSampler coarse_sampler{0.1, coarse_action, engine};
@@ -57,18 +57,19 @@ int main(int argc, char *argv[]) {
 
   single_level_mcmc mcmc(sampler);
 
-  Path initial_path = ZeroPath(N);
+  Path initial_tune_path = ZeroPath(N / 2);
   auto tuned_value =
-      coarse_sampler.autotune_stepsize(initial_path, params["hmc_acc_rate"]);
+      coarse_sampler.autotune_stepsize(initial_tune_path, params["hmc_acc_rate"]);
 
-  using QOI = mean_displacement<Path>;
+  Path initial_path = ZeroPath(N);
+  using QOI         = mean_displacement<Path>;
   const auto result =
       mcmc.run<QOI>(params["n_burnin"], initial_path, params["stat_error"]);
 
   std::cout << "Result          = " << result.mean() << " ± " << result.mean_error()
             << "\n";
   std::cout << "|Q - Q_{exact}| = "
-            << std::abs(result.mean() - action.analytic_solution(N)) << "\n";
+            << std::abs(result.mean() - action.analytic_solution()) << "\n";
   std::cout << "Samples         = " << result.num_samples() << "\n";
   std::cout << "Acceptance rate = " << result.acceptance_rate() << "\n";
   std::cout << "Autocorr. time  = " << result.integrated_autocorr_time() << "\n";

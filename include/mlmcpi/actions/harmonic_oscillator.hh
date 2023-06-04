@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 
@@ -8,14 +9,18 @@ namespace mlmcpi {
 template <typename TPathType> struct harmonic_oscillator_action {
   using PathType = TPathType;
 
-  harmonic_oscillator_action(double delta_t_, double m0_ = 1., double mu2_ = 1.) noexcept
-      : delta_t(delta_t_),
+  harmonic_oscillator_action(std::size_t path_length_, double delta_t_, double m0_ = 1.,
+                             double mu2_ = 1.) noexcept
+      : path_length{path_length_},
+        delta_t{delta_t_},
         m0{m0_},
         mu2{mu2_},
         W_curvature_((2. / delta_t + delta_t * mu2) * m0),
         W_minimum_scaling(0.5 / (1. + 0.5 * delta_t * delta_t * mu2)) {}
 
   double evaluate(const PathType &path) const {
+    assert(path.size() == path_length);
+
     // First term is computed separately using periodic BCs
     auto dxdt = (path[0] - path[path.size() - 1]) / delta_t;
     auto dxdt2 = dxdt * dxdt;
@@ -30,6 +35,8 @@ template <typename TPathType> struct harmonic_oscillator_action {
   }
 
   PathType grad_potential(const PathType &path) const {
+    assert(path.size() == path_length);
+
     PathType force(path.size());
 
     double A = m0 / delta_t;
@@ -46,7 +53,7 @@ template <typename TPathType> struct harmonic_oscillator_action {
     return force;
   }
 
-  double analytic_solution(std::size_t path_length) const {
+  double analytic_solution() const {
     double R = 1. + 0.5 * delta_t * delta_t * mu2 -
                delta_t * std::sqrt(mu2) * std::sqrt(1. + 0.25 * delta_t * delta_t * mu2);
     return 1. /
@@ -59,13 +66,24 @@ template <typename TPathType> struct harmonic_oscillator_action {
     return W_minimum_scaling * (x_m + x_p);
   }
 
-  harmonic_oscillator_action make_coarsened_action(double factor = 2) const {
+  harmonic_oscillator_action make_coarsened_action() const {
     auto coarse_action(*this);
-    coarse_action.delta_t *= factor;
+    coarse_action.delta_t *= 2;
+    coarse_action.path_length /= 2;
     return coarse_action;
   }
 
+  harmonic_oscillator_action make_finer_action() const {
+    auto coarse_action(*this);
+    coarse_action.delta_t /= 2;
+    coarse_action.path_length *= 2;
+    return coarse_action;
+  }
+
+  std::size_t get_path_length() const { return path_length; }
+
 private:
+  std::size_t path_length;
   double delta_t;
 
   double m0;
