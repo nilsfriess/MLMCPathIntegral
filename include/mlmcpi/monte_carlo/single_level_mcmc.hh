@@ -21,7 +21,8 @@ template <typename Sampler> struct single_level_mcmc {
 
   template <typename QOI = mlmcpi::identity<PathType>>
   mcmc_result<typename QOI::ResultType> run(std::size_t n_burnin, PathType initial_path,
-                                            double target_error = 1e-2) {
+                                            double target_error = 1e-2,
+                                            std::size_t max_steps = 10000) {
     QOI qoi;
     mcmc_result<typename QOI::ResultType> result;
 
@@ -45,13 +46,13 @@ template <typename Sampler> struct single_level_mcmc {
     std::size_t step = 1;
     std::size_t required_samples = std::numeric_limits<std::size_t>::max();
 
-    // Check if we have enough samples for the required error every 100 steps
-    while (step <= required_samples) {
+    while (step <= required_samples && step <= max_steps) {
       const auto proposal = sampler.perform_step(current);
       current = proposal.value_or(current);
 
       result.add_sample(qoi(std::forward<PathType>(current)), proposal.has_value());
 
+      // Check if we have enough samples for the required error every 100 steps
       if (step % 100 == 0) {
         required_samples = compute_required_samples();
 
