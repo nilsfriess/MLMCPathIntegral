@@ -13,6 +13,9 @@ target_link_libraries(harmonic_oscillator PRIVATE MLMCPathIntegral nlohmann_json
 add_executable(harmonic_oscillator_two_level harmonic_oscillator_two_level.cc)
 target_link_libraries(harmonic_oscillator_two_level PRIVATE MLMCPathIntegral nlohmann_json::nlohmann_json)
 
+add_executable(harmonic_oscillator_multilevel harmonic_oscillator_multilevel.cc)
+target_link_libraries(harmonic_oscillator_multilevel PRIVATE MLMCPathIntegral nlohmann_json::nlohmann_json)
+
 add_executable(banana banana.cc)
 target_link_libraries(banana PRIVATE LAPACK::LAPACK)
  

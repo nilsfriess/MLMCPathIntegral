@@ -19,6 +19,8 @@ public:
         engine{engine_} {}
 
   PathType sample(const PathType &even_points) {
+    assert(2 * even_points.size() == action.get_path_length());
+
     PathType odd_points(even_points.size());
 
     for (std::size_t i = 0; i < even_points.size() - 1; ++i) {
@@ -41,6 +43,7 @@ public:
   }
 
   double log_density(const PathType &path) const {
+    assert(path.size() == action.get_path_length());
     const auto size = path.size();
 
     auto x_m = path[size - 2];
