@@ -24,14 +24,15 @@ template <typename TPathType> struct harmonic_oscillator_action {
     // First term is computed separately using periodic BCs
     auto dxdt = (path[0] - path[path.size() - 1]) / delta_t;
     auto dxdt2 = dxdt * dxdt;
-    double res = (dxdt2 + mu2 * path[0] * path[0]);
+    double res = m0 * dxdt2 + mu2 * path[0] * path[0];
 
     for (std::size_t i = 1; i < path.size(); ++i) {
       dxdt = (path[i] - path[i - 1]) / delta_t;
       dxdt2 = dxdt * dxdt;
-      res += dxdt2 + mu2 * path[i] * path[i];
+      res += m0 * dxdt2 + mu2 * path[i] * path[i];
     }
-    return 0.5 * m0 * delta_t * res;
+
+    return 0.5 * delta_t * res;
   }
 
   PathType grad_potential(const PathType &path) const {
@@ -51,14 +52,6 @@ template <typename TPathType> struct harmonic_oscillator_action {
         A * (B * path[path.size() - 1] - path[path.size() - 2] - path[0]);
 
     return force;
-  }
-
-  double analytic_solution() const {
-    double R = 1. + 0.5 * delta_t * delta_t * mu2 -
-               delta_t * std::sqrt(mu2) * std::sqrt(1. + 0.25 * delta_t * delta_t * mu2);
-    return 1. /
-           (2. * m0 * std::sqrt(mu2) * std::sqrt(1 + 0.25 * delta_t * delta_t * mu2)) *
-           (1. + std::pow(R, path_length)) / (1. - std::pow(R, path_length));
   }
 
   inline double W_curvature(double /*x_m*/, double /*x_p*/) const { return W_curvature_; }

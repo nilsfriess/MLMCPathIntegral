@@ -22,7 +22,7 @@ template <typename Sampler> struct single_level_mcmc {
   template <typename QOI = mlmcpi::identity<PathType>>
   mcmc_result<typename QOI::ResultType> run(std::size_t n_burnin, PathType initial_path,
                                             double target_error = 1e-2,
-                                            std::size_t max_steps = 10000) {
+                                            std::size_t max_steps = 1000000) {
     QOI qoi;
     mcmc_result<typename QOI::ResultType> result;
 

@@ -1,3 +1,4 @@
+#include "analytic_solution.hh"
 #include "mlmcpi/actions/harmonic_oscillator.hh"
 #include "mlmcpi/common/partition.hh"
 #include "mlmcpi/distributions/gaussian_even_odd_conditional.hh"
@@ -60,16 +61,21 @@ int main(int argc, char *argv[]) {
   Path initial_tune_path = ZeroPath(N / 2);
   auto tuned_value =
       coarse_sampler.autotune_stepsize(initial_tune_path, params["hmc_acc_rate"]);
+  if (tuned_value)
+    std::cout << "Tuned hmc sampler with step size " << tuned_value.value() << "\n";
+  else
+    std::cout << "Failed to tune hmc sampler\n";
 
   Path initial_path = ZeroPath(N);
   using QOI         = mean_displacement<Path>;
   const auto result =
       mcmc.run<QOI>(params["n_burnin"], initial_path, params["stat_error"]);
 
+  const auto analytical = analytic_solution(delta_t, params["m0"], params["mu2"], N);
+
   std::cout << "Result          = " << result.mean() << " ± " << result.mean_error()
             << "\n";
-  std::cout << "|Q - Q_{exact}| = "
-            << std::abs(result.mean() - action.analytic_solution()) << "\n";
+  std::cout << "|Q - Q_{exact}| = " << std::abs(result.mean() - analytical) << "\n";
   std::cout << "Samples         = " << result.num_samples() << "\n";
   std::cout << "Acceptance rate = " << result.acceptance_rate() << "\n";
   std::cout << "Autocorr. time  = " << result.integrated_autocorr_time() << "\n";
