@@ -26,7 +26,7 @@ $ cmake --build build
 ```
 To run, e.g., the harmonic oscillator example, run
 ```
-$ ./build/harmonic_oscillator "./examples/harmonic_oscillator.json"
+$ ./build/examples/harmonic_oscillator "./examples/harmonic_oscillator.json"
 ```
 The file `./apps/harmonic_oscillator.json` contains the parameters for the MCMC sampler.
 
