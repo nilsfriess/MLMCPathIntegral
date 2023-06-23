@@ -28,7 +28,7 @@ To run, e.g., the harmonic oscillator example, run
 ```
 $ ./build/examples/harmonic_oscillator "./examples/harmonic_oscillator.json"
 ```
-The file `./apps/harmonic_oscillator.json` contains the parameters for the MCMC sampler.
+The file `./examples/harmonic_oscillator.json` contains the parameters for the MCMC sampler.
 
 ## Acknowledgements
 The single level idea is explained in [1]. The multilevel approach is from [2]; the implementation here is inspired by [this repository](https://github.com/eikehmueller/mlmcpathintegral).
